@@ -3,12 +3,16 @@ package org.example.chttp;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.cli.ParseException;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -16,14 +20,20 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(ExitTrapperExtension.class)
 class MainTest {
+    @NotNull
     @RegisterExtension
     StandardOutCaptorExtension standardOutCaptorExtension = new StandardOutCaptorExtension();
 
+    @NotNull
     @RegisterExtension
     StandardErrorCaptorExtension standardErrorCaptorExtension = new StandardErrorCaptorExtension();
 
+    @NotNull
     @RegisterExtension
     MockWebServerExtension mockWebServerExtension = new MockWebServerExtension();
+
+    @TempDir
+    Path tempDir;
 
     @Test
     @DisplayName("URLが指定された場合そのURLへ接続しレスポンスを出力する")
@@ -40,6 +50,34 @@ class MainTest {
         }
         String out = standardOutCaptorExtension.getOut();
         assertThat(out, containsString("こんにちは世界"));
+        String err = standardErrorCaptorExtension.getErr();
+        assertThat(err, is(emptyString()));
+    }
+
+    @Test
+    @DisplayName("--outputオプションが指定された場合指定されたファイルに出力する")
+    void whenOutputOptionSpecified(){
+        MockWebServer server = mockWebServerExtension.getServer();
+        String url = server.url("/hello/world").toString();
+        String exampleBody = "こんにちは世界";
+        server.enqueue(new MockResponse().setBody(exampleBody));
+        Path outputPath = tempDir.resolve("test.txt");
+        try {
+            Main.main(new String[]{"--output", outputPath.toString(), url});
+        } catch (ExitException e) {
+            assertThat(e.getStatus(), is(equalTo(0)));
+        } catch (ParseException | IOException e) {
+            fail();
+        }
+        String actualOutput = null;
+        try {
+            actualOutput = new String(Files.readAllBytes(outputPath));
+        } catch (IOException e) {
+            fail();
+        }
+        assertThat(actualOutput, is(exampleBody));
+        String out = standardOutCaptorExtension.getOut();
+        assertThat(out, is(emptyString()));
         String err = standardErrorCaptorExtension.getErr();
         assertThat(err, is(emptyString()));
     }
