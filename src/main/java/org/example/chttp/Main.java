@@ -45,16 +45,16 @@ public class Main {
             assert body != null;
             String output = requestOptions.getOutput();
             if (output == null) {
-                requestSub(body, System.out);
+                outputResponseBody(body, System.out);
             } else {
                 try (OutputStream out = Files.newOutputStream(Paths.get(output))) {
-                    requestSub(body, out);
+                    outputResponseBody(body, out);
                 }
             }
         }
     }
 
-    private static void requestSub(ResponseBody body, OutputStream out) throws IOException {
+    private static void outputResponseBody(ResponseBody body, OutputStream out) throws IOException {
         try (BufferedSource source = body.source()) {
             byte[] buffer = new byte[BUFFER_SIZE];
             while (!source.exhausted()) {
