@@ -1,8 +1,11 @@
 package org.example.chttp;
 
+import okhttp3.Headers;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.commons.cli.ParseException;
+import org.example.chttp.extension.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,7 +59,7 @@ class MainTest {
 
     @Test
     @DisplayName("--outputオプションが指定された場合指定されたファイルに出力する")
-    void whenOutputOptionSpecified(){
+    void whenOutputOptionSpecified() {
         MockWebServer server = mockWebServerExtension.getServer();
         String url = server.url("/hello/world").toString();
         String exampleBody = "こんにちは世界";
@@ -80,6 +83,50 @@ class MainTest {
         assertThat(out, is(emptyString()));
         String err = standardErrorCaptorExtension.getErr();
         assertThat(err, is(emptyString()));
+    }
+
+    @Test
+    @DisplayName("--headerオプションが指定された場合リクエストヘッダを追加する")
+    void whenHeaderOptionSpecified() {
+        MockWebServer server = mockWebServerExtension.getServer();
+        String url = server.url("/hello/world").toString();
+        String exampleBody = "こんにちは世界";
+        server.enqueue(new MockResponse().setBody(exampleBody));
+        try {
+            Main.main(new String[]{"--header", "MyHeader: My header value", url});
+        } catch (ExitException e) {
+            assertThat(e.getStatus(), is(equalTo(0)));
+        } catch (ParseException | IOException e) {
+            fail();
+        }
+        String out = standardOutCaptorExtension.getOut();
+        assertThat(out, is(exampleBody));
+        String err = standardErrorCaptorExtension.getErr();
+        assertThat(err, is(emptyString()));
+        RecordedRequest request = null;
+        try {
+            request = server.takeRequest();
+        } catch (InterruptedException e) {
+            fail();
+        }
+        Headers headers = request.getHeaders();
+        assertThat(headers.get("MyHeader"), is("My header value"));
+    }
+
+    @Test
+    @DisplayName("--headerオプションに不正な値が指定された場合例外が発生する")
+    void whenInvalidHeaderOptionSpecified() {
+        MockWebServer server = mockWebServerExtension.getServer();
+        String url = server.url("/hello/world").toString();
+        String exampleBody = "こんにちは世界";
+        server.enqueue(new MockResponse().setBody(exampleBody));
+        try {
+            Main.main(new String[]{"--header", "Invalid header string", url});
+        } catch (ExitException | ParseException | IOException e) {
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertThat(e, is(instanceOf(IllegalArgumentException.class)));
+        }
     }
 
     @Test

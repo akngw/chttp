@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class Main {
     public static final String PROGRAM_NAME = "cHTTP";
@@ -36,7 +37,12 @@ public class Main {
 
     private static void request(@NotNull RequestOptions requestOptions) throws IOException {
         String url = requestOptions.getUrl();
-        Request request = new Request.Builder().url(url).build();
+        Request.Builder builder = new Request.Builder().url(url);
+        Map<String, String> headers = requestOptions.getHeaders();
+        if (headers != null) {
+            headers.forEach(builder::addHeader);
+        }
+        Request request = builder.build();
         try (Response response = new OkHttpClient().newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected response " + response);

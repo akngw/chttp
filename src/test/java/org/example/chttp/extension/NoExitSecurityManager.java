@@ -1,4 +1,4 @@
-package org.example.chttp;
+package org.example.chttp.extension;
 
 import java.security.Permission;
 

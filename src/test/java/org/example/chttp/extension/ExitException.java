@@ -1,6 +1,6 @@
-package org.example.chttp;
+package org.example.chttp.extension;
 
-class ExitException extends RuntimeException {
+public class ExitException extends RuntimeException {
     private final int status;
 
     public ExitException(int status) {

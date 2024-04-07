@@ -1,23 +1,22 @@
-package org.example.chttp;
+package org.example.chttp.extension;
 
-import lombok.Getter;
-import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-@Getter
-public class MockWebServerExtension implements BeforeEachCallback, AfterEachCallback {
-    private MockWebServer server;
+public class ExitTrapperExtension implements BeforeEachCallback, AfterEachCallback {
+
+    private SecurityManager originalSecurityManager;
 
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
-        server.shutdown();
+        System.setSecurityManager(originalSecurityManager);
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        server = new MockWebServer();
-        server.start();
+        originalSecurityManager = System.getSecurityManager();
+        System.setSecurityManager(new NoExitSecurityManager());
     }
+
 }

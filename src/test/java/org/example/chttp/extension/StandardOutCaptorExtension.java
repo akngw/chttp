@@ -1,4 +1,4 @@
-package org.example.chttp;
+package org.example.chttp.extension;
 
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -7,23 +7,23 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-public class StandardErrorCaptorExtension implements BeforeEachCallback, AfterEachCallback {
-    private PrintStream originalErr;
-    private ByteArrayOutputStream err;
+public class StandardOutCaptorExtension implements BeforeEachCallback, AfterEachCallback {
+    private PrintStream originalOut;
+    private ByteArrayOutputStream out;
 
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
-        System.setErr(originalErr);
+        System.setOut(originalOut);
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        originalErr = System.err;
-        err = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(err));
+        originalOut = System.out;
+        out = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(out));
     }
 
-    public String getErr() {
-        return err.toString();
+    public String getOut() {
+        return out.toString();
     }
 }
