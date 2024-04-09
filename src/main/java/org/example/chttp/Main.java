@@ -1,9 +1,6 @@
 package org.example.chttp;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 import okio.BufferedSource;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -38,9 +35,12 @@ public class Main {
     private static void request(@NotNull RequestOptions requestOptions) throws IOException {
         String url = requestOptions.getUrl();
         Request.Builder builder = new Request.Builder().url(url);
-        Map<String, String> headers = requestOptions.getHeaders();
-        if (headers != null) {
-            headers.forEach(builder::addHeader);
+        addHeaders(requestOptions, builder);
+        String method = requestOptions.getMethod();
+        if (method == null || method.equals("GET")) {
+            builder.method("GET", null);
+        } else {
+            builder.method(method, RequestBody.create("test", MediaType.parse("text/plain")));
         }
         Request request = builder.build();
         try (Response response = new OkHttpClient().newCall(request).execute()) {
@@ -57,6 +57,13 @@ public class Main {
                     outputResponseBody(body, out);
                 }
             }
+        }
+    }
+
+    private static void addHeaders(@NotNull RequestOptions requestOptions, Request.Builder builder) {
+        Map<String, String> headers = requestOptions.getHeaders();
+        if (headers != null) {
+            headers.forEach(builder::addHeader);
         }
     }
 

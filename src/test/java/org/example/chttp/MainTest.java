@@ -130,6 +130,33 @@ class MainTest {
     }
 
     @Test
+    @DisplayName("--methodオプションでメソッドが指定できる")
+    void whenMethodOptionSpecified() {
+        MockWebServer server = mockWebServerExtension.getServer();
+        String url = server.url("/hello/world").toString();
+        String exampleBody = "こんにちは世界";
+        server.enqueue(new MockResponse().setBody(exampleBody));
+        try {
+            Main.main(new String[]{"--method", "POST", url});
+        } catch (ExitException e) {
+            assertThat(e.getStatus(), is(equalTo(0)));
+        } catch (ParseException | IOException e) {
+            fail();
+        }
+        String out = standardOutCaptorExtension.getOut();
+        assertThat(out, is(exampleBody));
+        String err = standardErrorCaptorExtension.getErr();
+        assertThat(err, is(emptyString()));
+        RecordedRequest request = null;
+        try {
+            request = server.takeRequest();
+        } catch (InterruptedException e) {
+            fail();
+        }
+        assertThat(request.getMethod(), is("POST"));
+    }
+
+    @Test
     @DisplayName("引数がない場合エラーを出力する")
     void whenNoCommandLineArgumentsProvided() {
         try {

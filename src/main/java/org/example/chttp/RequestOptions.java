@@ -19,6 +19,7 @@ public class RequestOptions {
     private final boolean isRequestedToPrintHelp;
     private final String output;
     private final Map<String, String> headers;
+    private final String method;
 
     @NotNull
     public static RequestOptions fromArguments(@NotNull String[] args) throws ParseException {
@@ -40,7 +41,11 @@ public class RequestOptions {
         if (commandLine.hasOption("header")) {
             headers = headersFrom(commandLine.getOptionValues("header"));
         }
-        return new RequestOptions(options, urlString, isRequestedToShowHelp, output, headers);
+        String method = null;
+        if (commandLine.hasOption("method")) {
+            method = commandLine.getOptionValue("method");
+        }
+        return new RequestOptions(options, urlString, isRequestedToShowHelp, output, headers, method);
     }
 
     private static Map<String, String> headersFrom(String[] headers) {
@@ -66,6 +71,7 @@ public class RequestOptions {
         options.addOption("h", "help", false, "shows this help.");
         options.addOption("o", "output", true, "writes output to given file. Existing file will be overwritten.");
         options.addOption("H", "header", true, "adds a header to the request headers.");
+        options.addOption("X", "method", true, "specifies HTTP method.");
         return options;
     }
 
@@ -73,11 +79,13 @@ public class RequestOptions {
                           String url,
                           boolean isRequestedToPrintHelp,
                           String output,
-                          Map<String, String> headers) {
+                          Map<String, String> headers,
+                          String method) {
         this.options = options;
         this.url = url;
         this.isRequestedToPrintHelp = isRequestedToPrintHelp;
         this.output = output;
         this.headers = headers;
+        this.method = method;
     }
 }
